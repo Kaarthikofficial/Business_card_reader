@@ -6,6 +6,7 @@ import re
 import pymysql
 import pandas as pd
 import io
+import Levenshtein
 
 st.set_page_config(layout='wide')
 
@@ -110,8 +111,6 @@ if file is not None:
                   'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
                   'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'TamilNadu',
                   'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal']
-
-        import Levenshtein
 
 
         def string_similarity(s1, s2):
@@ -219,8 +218,8 @@ query = "SELECT * FROM CARD"
 dataframe = pd.read_sql(query, connection)
 st.dataframe(dataframe)
 
-c3, c4, c5, c6 = st.columns([0.5, 4, 1, 4])
-with c4:
+c3, c4 = st.columns([6, 6])
+with c3:
     st.write(' ')
     st.write("#### BUSINESS CARDS AVAILABLE IN DATABASE")
     cursor.execute("SELECT id FROM CARD")
@@ -264,7 +263,7 @@ with c4:
                 st.write(' ')
 
 # DELETE MULTIPLE ENTRIES
-with c6:
+with c4:
     st.write(' ')
     st.write(f"#### SELECT ENTRIES TO DELETE")
     selected_options = st.multiselect('', l)
