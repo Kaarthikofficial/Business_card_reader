@@ -25,18 +25,8 @@ connection = pymysql.connect(
 )
 
 cursor = connection.cursor()
-# def format_title(title: str):
-#     """
-#     Formats the given title with a colored box and padding
-#     """
-#     frm_title = f"<div style='padding:10px;background-color:rgb(230, 0, 172, 0.1);
-#                   border-radius:5px'><h1 style='color:rgb(204, 0, 153);text-align:center;'>{title}</h1></div>"
-#     return frm_title
-#
-#
-# Use the function to format your title
-# st.markdown(format_title("UNLOCKING DATA FROM BUSINESS CARDS USING OCR"), unsafe_allow_html=True)
 
+#Create title
 st.header(":green[Extracting data from Business card]")
 
 st.write("")
@@ -44,7 +34,7 @@ st.write("")
 with st.container():
     file = st.file_uploader("Upload image file", type=['png', 'jpg', 'jpeg'])
 
-
+# Function to read the image
 @st.cache_data
 def model():
     img_reader = ocr.Reader(['en'])
@@ -52,6 +42,7 @@ def model():
 
 
 reader = model()
+# Open the image file
 if file is not None:
     inp_img = Image.open(file)
 
@@ -59,12 +50,14 @@ if file is not None:
     with c1:
         st.image(inp_img)
 
+    # Read the content using the model function
     content = reader.readtext(np.array(inp_img), adjust_contrast=2)
     data = []
+    # Append the content to the created list
     for text in content:
         data.append(text[1])
     # print(data)
-
+    # Create set of empty lists and strings to store the extracting text
     phone = []
     address = []
     street = ''
@@ -78,6 +71,7 @@ if file is not None:
     add1 = ''
     add2 = ''
 
+    # Iterate over the list and get the text data
     for i, string in enumerate(data):
         if re.search(r'@', string.lower()):
             email = string.lower()
@@ -112,7 +106,7 @@ if file is not None:
                   'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'TamilNadu',
                   'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal']
 
-
+        # Using Levenshtein distance method to find the matched words
         def string_similarity(s1, s2):
             distance = Levenshtein.distance(s1, s2)
             similarity = 1 - (distance / max(len(s1), len(s2)))
@@ -134,8 +128,10 @@ if file is not None:
         #         designation = string
     street = add1 + ' ' + add2 + ' '
     add_str.append(street)
-    # print(add_str)
+    add_str = [string.strip() for string in add_str]
+    print(add_str)
 
+    # Store the texts extracted to the required lists and string
     with c2:
         st.write("#### Extracted text")
         for i, string in enumerate(data):
@@ -143,8 +139,6 @@ if file is not None:
                 if not re.match("^[0-9]{0,3}$", string) and not re.match("^[^a-zA-Z0-9]+$", string):
                     numbers = re.findall('\d', string)
                     print(numbers)
-                    # if len(numbers) == 0 or all(len(num) < 3 for num in numbers) and not any(
-                    #         num in string for num in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']*3):
                     if len(numbers) == 0 or all(len(num) < 3 for num in numbers) and not any(
                             num in string for num in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']):
                         company_details.append(string)
@@ -156,24 +150,27 @@ if file is not None:
             c = company_details[2]
         st.write("##### <span style='color:#AD18E8;'>Company name:</span>", c, unsafe_allow_html=True)
 
-        if street not in address:
-            add_st = street + ' '.join([str(elem) for elem in address])
-        elif add_str not in address:
+        if all(elem in address for elem in add_str):
             add_st = ' '.join([str(elem) for elem in address])
         else:
-            add_st = add_str + state
+            add_st = street + ' '.join([str(elem) for elem in address])
+        # elif add_str in address:
+        #     add_st = ' '.join([str(elem) for elem in address])
+        # else:
+        #     add_st = add_str + state
 
-        st.write('##### :blue[Address: ] ', add_st)
-        st.write('##### :blue[Pincode: ] ' + str(pincode))
+        st.write("##### <span style='color:#AD18E8;'>Address:</span>", add_st, unsafe_allow_html=True)
+        st.write("##### <span style='color:#AD18E8;'>Pincode:</span>", str(pincode), unsafe_allow_html=True)
         web = '.'.join([str(elem) for elem in website])
-        st.write('##### :yellow[Website: ] ', web)
+        st.write("##### <span style='color:#AD18E8;'>Website:</span>", web, unsafe_allow_html=True)
         # st.write('##### :blue[Website: ] ' + str(website))
-        st.write('##### :blue[Email: ] ' + str(email))
+        st.write("##### <span style='color:#AD18E8;'>Email:</span>", str(email), unsafe_allow_html=True)
         ph_str = ', '.join(phone)
-        st.write('##### :blue[Phone Number(S): ] ' + ph_str)
+        st.write("##### <span style='color:#AD18E8;'>Phone number(s):</span>", ph_str, unsafe_allow_html=True)
 
-        # print(address)
+        print(address)
 
+# Button to upload into database  
 UP = st.button('UPLOAD')
 
 for i, string in enumerate(data):
@@ -201,6 +198,7 @@ Address = add_st
 file.seek(0)
 image_data = file.read()
 
+# Insert the data into database
 if UP:
     if file is not None:
         data = (Name, Designation, Company_name, Website, Email, Pincode, Phone_no, Address, image_data)
@@ -214,6 +212,7 @@ st.write(' ')
 st.write(' ')
 st.write('### Data in Business card')
 
+# Read the data from database
 query = "SELECT * FROM CARD"
 dataframe = pd.read_sql(query, connection)
 st.dataframe(dataframe)
