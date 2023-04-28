@@ -26,3 +26,5 @@ to extraction of text data from images
 format of the data extracted.
 2. It is also limited to extract contents only in English language.
 3. Used only for business cards.
+
+*App link:* https://kaarthikofficial-business-card-reader-ocr-reader-7xhble.streamlit.app/
